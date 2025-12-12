@@ -1,7 +1,7 @@
 """Queue management and voting endpoints"""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from app.models import QueueItem, Song, Vote, User
+from app.models import QueueItem, Song, Vote, User, Room
 from app.schemas import QueueItemAdd, QueueItemResponse, SongResponse, VoteRequest
 from app.database import get_db_session
 from app.auth import get_current_user, require_host
@@ -209,25 +209,38 @@ async def remove_from_queue(
     session: Session = Depends(get_db_session)
 ):
     """Remove a song from the queue (host only)"""
-    queue_item = session.get(QueueItem, queue_item_id)
-    if not queue_item:
-        raise HTTPException(status_code=404, detail="Queue item not found")
-    
-    if queue_item.room_id != current_user.room_id:
-        raise HTTPException(status_code=403, detail="Not in the same room")
-    
-    room_code = queue_item.room.code
-    session.delete(queue_item)
-    session.commit()
-    
-    # Reorder remaining items
-    reorder_queue(session, current_user.room_id)
-    
-    # Broadcast to room
-    ws_manager = get_websocket_manager()
-    await ws_manager.broadcast(room_code, {
-        "type": "song_removed",
-        "queue_item_id": queue_item_id
-    })
-    
-    return {"message": "Song removed from queue"}
+    try:
+        queue_item = session.get(QueueItem, queue_item_id)
+        if not queue_item:
+            raise HTTPException(status_code=404, detail="Queue item not found")
+        
+        if queue_item.room_id != current_user.room_id:
+            raise HTTPException(status_code=403, detail="Not in the same room")
+        
+        # Get room code BEFORE deleting (important!)
+        room = session.get(Room, queue_item.room_id)
+        room_code = room.code if room else current_user.room.code
+        
+        # Delete the queue item
+        session.delete(queue_item)
+        session.flush()  # Flush first to ensure delete is pending
+        
+        # Reorder remaining items (this will commit)
+        reorder_queue(session, current_user.room_id)
+        
+        # Broadcast to room
+        ws_manager = get_websocket_manager()
+        await ws_manager.broadcast(room_code, {
+            "type": "song_removed",
+            "queue_item_id": queue_item_id
+        })
+        
+        return {"message": "Song removed from queue"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        print(f"Error removing song: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to remove song: {str(e)}")

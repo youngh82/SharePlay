@@ -105,28 +105,45 @@
 
   async function removeSong(queueItemId) {
     const authToken = sessionStorage.getItem("auth_token");
+    
+    console.log("Attempting to remove song:", queueItemId);
+    console.log("Auth token exists:", !!authToken);
+    
+    if (!authToken) {
+      alert("Authentication required. Please refresh the page.");
+      return;
+    }
+    
     if (!confirm("Remove this song from the queue?")) {
       return;
     }
     
     try {
-      const response = await fetch(`/api/queue/${queueItemId}`, {
+      const url = `/api/queue/${queueItemId}`;
+      console.log("DELETE request to:", url);
+      
+      const response = await fetch(url, {
         method: "DELETE",
         headers: {
           Authorization: "Bearer " + authToken,
         },
       });
       
+      console.log("Response status:", response.status);
+      
       if (response.ok) {
+        console.log("Song removed successfully");
         // Trigger queue update
         htmx.trigger("#queue-list", "queueUpdate");
       } else {
         const error = await response.json();
-        alert("Failed to remove song: " + (error.detail || "Unknown error"));
+        const detail = error.detail || "Unknown error";
+        console.error("Remove song error:", error);
+        alert("Failed to remove song: " + detail);
       }
     } catch (err) {
       console.error("Error removing song:", err);
-      alert("Failed to remove song");
+      alert("Failed to remove song: " + err.message);
     }
   }
 </script>

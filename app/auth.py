@@ -33,7 +33,7 @@ async def get_current_user(
     return user
 
 
-async def require_host(
+def require_host(
     user: User = Depends(get_current_user),
 ) -> User:
     """Ensure user is a room host"""
