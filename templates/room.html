@@ -1,0 +1,397 @@
+{% extends "base.html" %} {% block title %}Room {{ room.code }} - SharePlay{%
+endblock %} {% block content %}
+<div class="max-w-7xl mx-auto" data-room-code="{{ room.code }}">
+  <div
+    class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 glass-panel p-6 rounded-2xl"
+  >
+    <div>
+      <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+        Room Code:
+        <span
+          class="font-mono text-indigo-400 bg-indigo-400/10 px-3 py-1 rounded-lg border border-indigo-400/20"
+          >{{ room.code }}</span
+        >
+      </h1>
+      <p class="text-slate-400 text-sm mt-1">
+        Share the code with friends or scan the QR code.
+      </p>
+    </div>
+    <div
+      id="qr-code-container"
+      class="flex flex-col items-center bg-white p-2 rounded-xl shadow-lg"
+    >
+      {% if qr_code_url %}
+      <img
+        id="qr-code-image"
+        src="{{ qr_code_url }}"
+        alt="QR Code"
+        class="w-24 h-24"
+      />
+      {% else %}
+      <div class="w-24 h-24 bg-gray-200 rounded animate-pulse"></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-8">
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+            Now Playing
+          </h2>
+        </div>
+        <div
+          id="now-playing"
+          class="glass-panel rounded-2xl p-6 min-h-[200px] flex items-center justify-center relative overflow-hidden group"
+          hx-get="/fragments/now-playing/{{ room.code }}"
+          hx-trigger="load, songUpdate from:body"
+          hx-swap="innerHTML"
+        >
+          <div class="text-center text-slate-500">
+            <svg
+              class="w-10 h-10 mx-auto mb-3 opacity-50"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+              />
+            </svg>
+            <p>No song currently playing.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold text-white mb-4">Up Next</h2>
+        <div class="glass-panel rounded-2xl p-1">
+          <div
+            id="queue-list"
+            class="divide-y divide-white/5"
+            hx-get="/fragments/queue/{{ room.code }}"
+            hx-trigger="load, queueUpdate from:body"
+            hx-swap="innerHTML"
+          >
+            <div class="text-center py-12 text-slate-500">
+              <p>Queue is empty.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="lg:col-span-1 space-y-8">
+      <div class="glass-panel rounded-2xl p-6">
+        <h2 class="text-lg font-bold text-white mb-4">Add Songs</h2>
+        <div class="relative">
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Search on Spotify..."
+            class="w-full pl-10 pr-4 py-3 bg-slate-900/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            hx-get="/fragments/search-results"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#search-results"
+            hx-include="this"
+            hx-vals='js:{query: document.getElementById("search-input").value}'
+          />
+          <svg
+            class="w-5 h-5 text-slate-500 absolute left-3 top-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+
+          <div
+            id="search-spinner"
+            class="htmx-indicator absolute right-3 top-3.5"
+          >
+            <div
+              class="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"
+            ></div>
+          </div>
+        </div>
+
+        <div
+          id="search-results"
+          class="mt-4 space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar"
+        ></div>
+      </div>
+
+      <div
+        id="host-controls"
+        class="glass-panel rounded-2xl p-6 hidden border-l-4 border-l-indigo-500"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-white">Host Controls</h2>
+          <span
+            class="text-xs bg-indigo-500 text-white px-2 py-0.5 rounded-full"
+            >HOST</span
+          >
+        </div>
+
+        <div id="spotify-connect-container" class="mb-4 hidden">
+          <p class="text-sm text-slate-400 mb-3">
+            Connect Spotify to play music.
+          </p>
+          <a
+            id="spotify-connect-link"
+            href="#"
+            class="block w-full bg-[#1DB954] hover:bg-[#1ed760] text-black text-center py-2.5 rounded-lg font-bold transition-colors"
+          >
+            Connect Spotify
+          </a>
+        </div>
+
+        <div id="player-controls" class="space-y-6 hidden">
+          <div class="flex justify-center items-center gap-6">
+            <button
+              id="btn-play"
+              class="w-16 h-16 rounded-full bg-white text-indigo-900 hover:scale-105 shadow-lg shadow-white/10 transition-all flex items-center justify-center"
+            >
+              <svg class="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"
+                />
+              </svg>
+            </button>
+            <button
+              id="btn-pause"
+              class="w-16 h-16 rounded-full bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/30 transition-all flex items-center justify-center hidden"
+            >
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  d="M5 4a2 2 0 012-2h2a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V4zm8 0a2 2 0 012-2h2a2 2 0 012 2v12a2 2 0 01-2 2h-2a2 2 0 01-2-2V4z"
+                />
+              </svg>
+            </button>
+            <button
+              id="btn-skip"
+              class="w-12 h-12 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white transition-all flex items-center justify-center"
+            >
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798l-5.445-3.63z"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div class="px-2">
+            <div class="flex items-center gap-3">
+              <svg
+                class="w-4 h-4 text-slate-500"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <input
+                type="range"
+                id="volume-slider"
+                min="0"
+                max="100"
+                value="50"
+                class="flex-1 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+              />
+              <span
+                id="volume-value"
+                class="text-xs text-slate-500 w-8 text-right"
+                >50%</span
+              >
+            </div>
+          </div>
+
+          <div class="text-center text-xs text-slate-500" id="player-status">
+            Ready to play
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-6">
+        <h2
+          class="text-lg font-bold text-white mb-4 flex justify-between items-center"
+        >
+          Members
+          <span
+            id="user-count"
+            class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded-full"
+            >(0)</span
+          >
+        </h2>
+        <div
+          id="user-list"
+          class="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar"
+          hx-get="/fragments/users/{{ room.code }}"
+          hx-trigger="load, userUpdate from:body"
+          hx-swap="innerHTML"
+        ></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script src="https://sdk.scdn.co/spotify-player.js"></script>
+<script src="/static/js/websocket.js"></script>
+<script src="/static/js/audio.js"></script>
+<script>
+  const authToken = sessionStorage.getItem("auth_token");
+  if (!authToken) {
+    alert("No authentication token found. Please join the room again.");
+    window.location.href = "/";
+  }
+  document.body.addEventListener("htmx:configRequest", (event) => {
+    event.detail.headers["Authorization"] = "Bearer " + authToken;
+  });
+  const roomCode = "{{ room.code }}";
+  const ws = new RoomWebSocket(roomCode);
+
+  if (authToken) {
+    fetch("/api/auth/token", {
+      headers: { Authorization: "Bearer " + authToken },
+    })
+      .then((response) => {
+        if (response.ok) return response.json();
+        if (response.status === 403) return null;
+        if (response.status === 404)
+          return { access_token: null, is_host: true };
+        return null;
+      })
+      .then((data) => {
+        if (data) {
+          document.getElementById("host-controls").classList.remove("hidden");
+          if (data.access_token) {
+            document
+              .getElementById("player-controls")
+              .classList.remove("hidden");
+            window.onSpotifyWebPlaybackSDKReady = () => {
+              window.audioPlayer = new SpotifySDKPlayer(data.access_token);
+            };
+            if (window.Spotify) {
+              window.audioPlayer = new SpotifySDKPlayer(data.access_token);
+            }
+          } else if (data.is_host) {
+            const connectContainer = document.getElementById(
+              "spotify-connect-container"
+            );
+            connectContainer.classList.remove("hidden");
+            const link = document.getElementById("spotify-connect-link");
+            if (link) {
+              link.href = `/api/auth/login?room_code=${roomCode}&token=${authToken}`;
+            }
+          }
+        }
+      })
+      .catch((e) => console.log("Not host or error", e));
+  }
+
+  fetch("/api/rooms/{{ room.code }}/status", {
+    headers: { Authorization: "Bearer " + authToken },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      document.getElementById(
+        "user-count"
+      ).textContent = `(${data.users.length})`;
+    })
+    .catch((err) => console.error("Error fetching room status:", err));
+
+  const qrImage = document.getElementById("qr-code-image");
+  if (qrImage && (!qrImage.src || qrImage.src === window.location.href)) {
+    fetch(`/api/rooms/${roomCode}/qr-code`, {
+      headers: { Authorization: "Bearer " + authToken },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.qr_code_url) qrImage.src = data.qr_code_url;
+      })
+      .catch((err) => console.error("Error loading QR code:", err));
+  }
+
+  document.getElementById("btn-play")?.addEventListener("click", async () => {
+    try {
+      if (!window.audioPlayer) {
+        alert("Spotify Player not initialized.");
+        return;
+      }
+      if (window.audioPlayer.isPaused) {
+        window.audioPlayer.resume();
+        return;
+      }
+      const audioData = document.getElementById("audio-player");
+      if (audioData && audioData.dataset.spotifyUri) {
+        await window.audioPlayer.play(audioData.dataset.spotifyUri);
+      } else {
+        alert("Please add a song to the queue first.");
+      }
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  });
+
+  document.getElementById("btn-pause")?.addEventListener("click", async () => {
+    try {
+      window.audioPlayer.pause();
+      document.getElementById("btn-pause").classList.add("hidden");
+      document.getElementById("btn-play").classList.remove("hidden");
+    } catch (err) {
+      console.error("Error pausing:", err);
+    }
+  });
+
+  const volumeSlider = document.getElementById("volume-slider");
+  const volumeValue = document.getElementById("volume-value");
+  volumeSlider?.addEventListener("input", (e) => {
+    const volume = parseInt(e.target.value);
+    volumeValue.textContent = `${volume}%`;
+    if (window.audioPlayer && window.audioPlayer.isReady) {
+      window.audioPlayer.setVolume(volume);
+    }
+  });
+  volumeSlider?.addEventListener("change", (e) => {
+    const volume = parseInt(e.target.value);
+    if (window.audioPlayer && window.audioPlayer.isReady) {
+      window.audioPlayer.setVolume(volume);
+    }
+  });
+
+  document.getElementById("btn-skip")?.addEventListener("click", async () => {
+    try {
+      const response = await fetch(`/api/playback/skip/${roomCode}`, {
+        method: "POST",
+        headers: { Authorization: "Bearer " + authToken },
+      });
+
+      if (response.ok) {
+        htmx.trigger(document.body, "queueUpdate");
+        htmx.trigger(document.body, "songUpdate");
+      } else if (response.status === 404) {
+        alert("No songs in queue.");
+      } else {
+        const error = await response.json();
+        alert("Skip failed: " + (error.detail || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error skipping:", err);
+      alert("Network error occurred.");
+    }
+  });
+</script>
+{% endblock %}

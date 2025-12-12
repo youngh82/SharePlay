@@ -1,0 +1,63 @@
+{% extends "base.html" %} {% block title %}Join Room {{ room.code }} -
+SharePlay{% endblock %} {% block content %}
+<div class="max-w-md mx-auto">
+  <div class="bg-white rounded-lg shadow-lg p-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2 text-center">Join Room</h1>
+    <p class="text-center text-gray-600 mb-6">
+      Room Code:
+      <span class="font-mono font-bold text-indigo-600">{{ room.code }}</span>
+    </p>
+
+    <form id="join-form" class="space-y-4">
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+          Your Name
+        </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          required
+          maxlength="50"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          placeholder="Enter your name"
+          autofocus
+        />
+      </div>
+      <button
+        type="submit"
+        class="w-full bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
+      >
+        Join Room
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script>
+  document.getElementById("join-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("name").value;
+    const roomCode = "{{ room.code }}";
+
+    try {
+      const response = await fetch("/api/rooms/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guest_name: name, room_code: roomCode }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        sessionStorage.setItem("auth_token", data.guest_token);
+        window.location.href = `/room/${data.room_code}`;
+      } else {
+        const error = await response.json();
+        alert("Error joining room: " + (error.detail || "Unknown error"));
+      }
+    } catch (err) {
+      alert("Error joining room: " + err.message);
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% if users %}
+<div class="space-y-2">
+  {% for user in users %}
+  <div
+    class="flex items-center space-x-3 p-3 rounded-lg {{ 'bg-indigo-500/10 border border-indigo-500/20' if user.role == 'host' else 'hover:bg-white/5' }} transition-colors"
+  >
+    <div
+      class="w-10 h-10 rounded-full {{ 'bg-indigo-600' if user.role == 'host' else 'bg-slate-700' }} flex items-center justify-center text-white font-bold"
+    >
+      {{ user.name[0].upper() }}
+    </div>
+    <div class="flex-1">
+      <div class="flex items-center gap-2">
+        <span class="font-medium text-slate-200">{{ user.name }}</span>
+        {% if user.role == 'host' %}
+        <span
+          class="text-[10px] bg-indigo-600 text-white px-1.5 py-0.5 rounded-full font-bold"
+          >HOST</span
+        >
+        {% endif %} {% if user.id == current_user.id %}
+        <span
+          class="text-[10px] bg-slate-600 text-slate-300 px-1.5 py-0.5 rounded-full"
+          >YOU</span
+        >
+        {% endif %}
+      </div>
+      <p class="text-xs text-slate-500">
+        Joined {{ user.joined_at.strftime('%H:%M') }}
+      </p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-8 text-slate-500">
+  <p class="text-sm">No one in the room.</p>
+</div>
+{% endif %}

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}SharePlay{% endblock %}</title>
+
+    <link rel="icon" type="image/png" href="/static/images/logo.png" />
+    <link rel="apple-touch-icon" href="/static/images/logo.png" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    <link rel="stylesheet" href="/static/css/styles.css" />
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .glass-panel {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .gradient-text {
+        background: linear-gradient(to right, #818cf8, #c084fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    </style>
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body
+    class="bg-slate-900 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white"
+  >
+    <div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+      <div
+        class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"
+      ></div>
+      <div
+        class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"
+      ></div>
+    </div>
+
+    <nav class="sticky top-0 z-50 border-b border-white/10 glass-panel">
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+          <div
+            class="flex items-center space-x-3 group cursor-pointer"
+            onclick="window.location.href='/'"
+          >
+            <img
+              src="/static/images/logo.png"
+              alt="SharePlay Logo"
+              class="h-10 object-contain group-hover:opacity-80 transition-opacity"
+            />
+            <span
+              class="text-xl font-bold tracking-tight text-white group-hover:text-indigo-300 transition-colors"
+              >SharePlay</span
+            >
+          </div>
+          {% block nav_extra %}{% endblock %}
+        </div>
+      </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8 flex-grow">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="border-t border-white/10 mt-auto py-8">
+      <div class="container mx-auto px-4 text-center">
+        <p class="text-slate-400 font-medium">&copy; 2025 SharePlay</p>
+        <p class="text-xs text-slate-600 mt-2">
+          Democratic Music Control System • Created by Young Hur
+        </p>
+      </div>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+  </body>
+</html>

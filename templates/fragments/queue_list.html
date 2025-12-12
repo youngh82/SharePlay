@@ -1,0 +1,108 @@
+{% if queue_items %}
+<div class="space-y-1">
+  {% for item in queue_items %}
+  <div
+    id="queue-item-{{ item.id }}"
+    class="group flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors border border-transparent hover:border-white/5"
+  >
+    <div class="flex items-center space-x-4 flex-1">
+      <span class="text-lg font-bold text-slate-600 w-6 text-center font-mono"
+        >{{ loop.index }}</span
+      >
+      <img
+        src="{{ item.song.album_cover_url }}"
+        alt="Album"
+        class="w-12 h-12 rounded-md shadow-sm object-cover"
+      />
+      <div class="flex-1 min-w-0">
+        <h4 class="font-semibold text-slate-200 truncate">
+          {{ item.song.title }}
+        </h4>
+        <p class="text-xs text-slate-500 truncate">{{ item.song.artist }}</p>
+      </div>
+    </div>
+
+    <div class="flex flex-col items-end gap-1 ml-4">
+      <div
+        class="flex items-center bg-slate-800 rounded-lg overflow-hidden border border-slate-700"
+      >
+        <button
+          onclick="vote({{ item.id }}, 1)"
+          class="p-1.5 hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-400 transition-colors"
+        >
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M5 11l5-5 5 5H5z" />
+          </svg>
+        </button>
+        <span
+          class="w-6 text-center text-xs font-bold text-slate-300 {{ 'text-emerald-400' if item.vote_count > 0 else '' }} {{ 'text-red-400' if item.vote_count < 0 else '' }}"
+        >
+          {{ item.vote_count }}
+        </span>
+        <button
+          onclick="vote({{ item.id }}, -1)"
+          class="p-1.5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors"
+        >
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M15 9l-5 5-5-5h10z" />
+          </svg>
+        </button>
+      </div>
+      <span class="text-[10px] text-slate-600"
+        >by {{ item.added_by.name }}</span
+      >
+    </div>
+  </div>
+  {% endfor %}
+</div>
+<script>
+  async function vote(queueItemId, voteType) {
+    const authToken = sessionStorage.getItem("auth_token");
+    try {
+      const response = await fetch("/api/queue/vote", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + authToken,
+        },
+        body: JSON.stringify({
+          queue_item_id: queueItemId,
+          vote_type: voteType,
+        }),
+      });
+      if (response.ok) {
+        htmx.trigger("#queue-list", "queueUpdate");
+      } else {
+        const error = await response.json();
+        const detail = error.detail || "Unknown error";
+
+        if (detail.includes("currently playing")) {
+          console.log("Cannot vote on currently playing song");
+        } else {
+          alert("Vote failed: " + detail);
+        }
+      }
+    } catch (err) {
+      console.error("Error voting:", err);
+    }
+  }
+</script>
+{% else %}
+<div class="text-center py-12 text-slate-500">
+  <svg
+    class="w-12 h-12 mx-auto mb-3 opacity-30"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+    />
+  </svg>
+  <p class="text-sm">Queue is empty.</p>
+  <p class="text-xs text-slate-600 mt-1">Search and add songs!</p>
+</div>
+{% endif %}
