@@ -221,6 +221,13 @@ async def remove_from_queue(
         room = session.get(Room, queue_item.room_id)
         room_code = room.code if room else current_user.room.code
         
+        # Delete all votes for this queue item first
+        votes = session.exec(
+            select(Vote).where(Vote.queue_item_id == queue_item_id)
+        ).all()
+        for vote in votes:
+            session.delete(vote)
+        
         # Delete the queue item
         session.delete(queue_item)
         session.flush()  # Flush first to ensure delete is pending
