@@ -15,6 +15,7 @@
 ## 🛠 Tech Stack
 
 ### Backend
+
 - **FastAPI 0.104.1**: Modern async web framework
 - **SQLModel 0.0.14**: Type-safe ORM with Pydantic validation
 - **SQLite**: Lightweight database with auto-creation
@@ -23,16 +24,19 @@
 - **OAuth 2.0 (PKCE)**: Secure authentication without client secret
 
 ### Frontend
+
 - **HTMX 1.9.10**: Dynamic HTML interactions without heavy JavaScript
 - **Tailwind CSS**: Utility-first CSS framework with glass-morphism effects
 - **Vanilla JavaScript**: WebSocket client and Spotify SDK integration
 - **Jinja2**: Server-side templating
 
 ### Real-time Communication
+
 - **WebSocket**: Bi-directional real-time updates for queue, playback state, and user presence
 - **Custom WebSocket Manager**: Handles room-based broadcasting
 
 ### External APIs
+
 - **Spotify Web API**: Music search and metadata
 - **Spotify Web Playback SDK**: Browser-based music playback
 - **QR Code Generation**: segno library for easy room joining
@@ -169,18 +173,18 @@ share_play/
 
 ### Key Technologies Used
 
-| Component | Technology | Version | Purpose |
-|-----------|-----------|---------|---------|
-| Web Framework | FastAPI | 0.104.1 | Async REST API + WebSocket |
-| ORM | SQLModel | 0.0.14 | Type-safe database models |
-| Database | SQLite | Built-in | Lightweight data storage |
-| Server | Uvicorn | 0.24.0 | ASGI server with auto-reload |
-| Spotify Client | Spotipy | 2.23.0 | Python Spotify API wrapper |
-| Frontend | HTMX | 1.9.10 | Dynamic HTML without heavy JS |
-| Styling | Tailwind CSS | 3.x | Utility-first CSS |
-| Templates | Jinja2 | 3.1.x | Server-side rendering |
-| QR Codes | segno | 1.6.1 | QR code generation |
-| Testing | pytest | 7.4.x | Test framework |
+| Component      | Technology   | Version  | Purpose                       |
+| -------------- | ------------ | -------- | ----------------------------- |
+| Web Framework  | FastAPI      | 0.104.1  | Async REST API + WebSocket    |
+| ORM            | SQLModel     | 0.0.14   | Type-safe database models     |
+| Database       | SQLite       | Built-in | Lightweight data storage      |
+| Server         | Uvicorn      | 0.24.0   | ASGI server with auto-reload  |
+| Spotify Client | Spotipy      | 2.23.0   | Python Spotify API wrapper    |
+| Frontend       | HTMX         | 1.9.10   | Dynamic HTML without heavy JS |
+| Styling        | Tailwind CSS | 3.x      | Utility-first CSS             |
+| Templates      | Jinja2       | 3.1.x    | Server-side rendering         |
+| QR Codes       | segno        | 1.6.1    | QR code generation            |
+| Testing        | pytest       | 7.4.x    | Test framework                |
 
 ### Data Flow
 
@@ -260,6 +264,7 @@ MIT License - See LICENSE file for details
 ## 👤 Author
 
 **Young Hur**
+
 - UMass Amherst - CS 326 Web Programming
 - GitHub: [@youngh82](https://github.com/youngh82)
 
